@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using bookDemo.Data;
 using bookDemo.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -85,6 +86,23 @@ namespace bookDemo.Controllers
                 });
             ApplicationContext.Books.Remove(dbBook);
             return NoContent();
+        }
+        [HttpPatch("{id:int}")]
+        public IActionResult partiallyUpdateOneBook([FromRoute(Name = "id")] int id, [FromBody] JsonPatchDocument<Book> bookPatch)
+        {
+            var dbBook = ApplicationContext.Books.Find(b => b.Id.Equals(id));
+            if (dbBook is null)
+            {
+                return BadRequest(
+                    new
+                    {
+                        StatusCode = 404,
+                        message = $"Book with id:{id} could not be found",
+                    }
+                );
+            }
+            bookPatch.ApplyTo(dbBook);
+            return NoContent(); // 204
         }
     }
 }
